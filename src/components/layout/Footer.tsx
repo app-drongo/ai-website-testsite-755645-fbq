@@ -26,8 +26,11 @@ export default function Footer() {
     },
   };
 
+  // ✅ FIX: Check if window exists before using it
   const handleBackToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (

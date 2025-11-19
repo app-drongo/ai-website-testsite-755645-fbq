@@ -20,7 +20,13 @@ const navigationItems: NavigationItem[] = [
 export default function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
+  const [currentPath, setCurrentPath] = useState('/');  // ✅ FIX: Track path in state
   const navigate = useSmartNavigation();
+
+  // ✅ FIX: Set current path in useEffect (client-side only)
+  useEffect(() => {
+    setCurrentPath(window.location.pathname);
+  }, []);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -38,7 +44,8 @@ export default function Navigation() {
   // Track active section on scroll (only for home page)
   useEffect(() => {
     const handleScroll = () => {
-      if (window.location.pathname !== '/') return;
+      // ✅ FIX: No direct window.location access - use state
+      if (currentPath !== '/') return;
 
       const sections = navigationItems.filter(item => item.section).map(item => item.section!);
       const scrollPosition = window.scrollY + 100;
@@ -57,14 +64,17 @@ export default function Navigation() {
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [currentPath]);  // ✅ FIX: Depend on currentPath state
 
   const handleNavClick = (item: NavigationItem) => {
     setIsOpen(false);
-    if (item.section && window.location.pathname === '/') {
+    // ✅ FIX: Use state instead of direct window.location
+    if (item.section && currentPath === '/') {
       navigate(`#${item.section}`);
     } else {
       navigate(item.href);
+      // Update current path when navigating
+      setCurrentPath(item.href);
     }
   };
 
@@ -73,10 +83,11 @@ export default function Navigation() {
   };
 
   const isActiveItem = (item: NavigationItem) => {
-    if (item.section && window.location.pathname === '/') {
+    // ✅ FIX: Use state instead of direct window.location
+    if (item.section && currentPath === '/') {
       return activeSection === item.section;
     }
-    return window.location.pathname === item.href;
+    return currentPath === item.href;
   };
 
   return (
@@ -91,7 +102,10 @@ export default function Navigation() {
             <Button
               variant="ghost"
               className="text-xl font-bold text-primary hover:text-primary/80 p-0 h-auto"
-              onClick={() => navigate('/')}
+              onClick={() => {
+                navigate('/');
+                setCurrentPath('/');
+              }}
             >
               <span data-editable="brandName">TechSaaS</span>
             </Button>
@@ -121,7 +135,10 @@ export default function Navigation() {
           <div className="hidden md:block">
             <Button
               className="bg-primary text-primary-foreground hover:bg-primary/90"
-              onClick={() => navigate('/quote')}
+              onClick={() => {
+                navigate('/quote');
+                setCurrentPath('/quote');
+              }}
               data-editable-href="ctaHref"
               data-href="/quote"
             >
@@ -172,6 +189,7 @@ export default function Navigation() {
                 onClick={() => {
                   setIsOpen(false);
                   navigate('/quote');
+                  setCurrentPath('/quote');
                 }}
                 data-editable-href="mobileCta"
                 data-href="/quote"
